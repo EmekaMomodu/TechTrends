@@ -29,7 +29,7 @@ app.config['SECRET_KEY'] = 'your secret key'
 @app.route('/')
 def index():
     connection = get_db_connection()
-    posts = connection.execute('SELECT * FROM posts').fetchall()
+    posts = connection.execute('SELECT * FROM posts order by created desc').fetchall()
     connection.close()
     return render_template('index.html', posts=posts)
 
