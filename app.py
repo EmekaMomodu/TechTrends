@@ -1,4 +1,6 @@
 import sqlite3
+import datetime
+import logging
 
 from flask import Flask, render_template, request, url_for, redirect, flash
 
@@ -14,10 +16,55 @@ def get_db_connection():
 # Function to get a post using its ID
 def get_post(post_id):
     connection = get_db_connection()
+    update_db_connection_count(connection)
     post = connection.execute('SELECT * FROM posts WHERE id = ?',
                               (post_id,)).fetchone()
     connection.close()
     return post
+
+
+def update_db_connection_count(connection):
+    query = None
+    try:
+        # get current count in db
+        current_metric_value = get_db_connection_count(connection)
+        # add one
+        new_metric_value = current_metric_value + 1
+        # update value
+        current_date_time = datetime.datetime.now()
+        query = 'UPDATE metrics SET value = ?, last_updated = ? WHERE name = ?'
+        metric_name = 'db_connection_count'
+        connection.execute(query, (new_metric_value, current_date_time, metric_name))
+        connection.commit()
+    except Exception as err:
+        app.logger.info('Query Failed: %s\nError: %s' % (query, str(err)))
+        print('Query Failed: %s\nError: %s' % (query, str(err)))
+
+
+def get_db_connection_count(connection):
+    metric_name = 'db_connection_count'
+    query = 'SELECT value FROM metrics WHERE name = ?'
+    db_connection_count = int(connection.execute(query, (metric_name,)).fetchone()[0])
+    return db_connection_count
+
+
+def get_post_count(connection):
+    query = 'SELECT COUNT(*) FROM posts'
+    post_count = int(connection.execute(query).fetchone()[0])
+    return post_count
+
+
+def update_post_count(connection, post_count):
+    query = None
+    try:
+        current_date_time = datetime.datetime.now()
+        query = 'UPDATE metrics SET value = ?, last_updated = ? WHERE name = ?'
+        metric_name = 'post_count'
+        connection.execute(query, (post_count, current_date_time, metric_name))
+        connection.commit()
+    except Exception as err:
+        app.logger.info('Query Failed: %s\nError: %s' % (query, str(err)))
+        print('Query Failed: %s\nError: %s' % (query, str(err)))
 
 
 # Define the Flask application
@@ -29,7 +76,8 @@ app.config['SECRET_KEY'] = 'your secret key'
 @app.route('/')
 def index():
     connection = get_db_connection()
-    posts = connection.execute('SELECT * FROM posts order by created desc').fetchall()
+    update_db_connection_count(connection)
+    posts = connection.execute('SELECT * FROM posts ORDER BY created DESC').fetchall()
     connection.close()
     return render_template('index.html', posts=posts)
 
@@ -40,14 +88,17 @@ def index():
 def post(post_id):
     post = get_post(post_id)
     if post is None:
+        app.logger.info("A non-existing article is accessed and a 404 page is returned")
         return render_template('404.html'), 404
     else:
+        app.logger.info("Article %s retrieved!" % (str(post['title'])))
         return render_template('post.html', post=post)
 
 
 # Define the About Us page
 @app.route('/about')
 def about():
+    app.logger.info("About-Us page is retrieved")
     return render_template('about.html')
 
 
@@ -62,11 +113,12 @@ def create():
             flash('Title is required!')
         else:
             connection = get_db_connection()
+            update_db_connection_count(connection)
             connection.execute('INSERT INTO posts (title, content) VALUES (?, ?)',
                                (title, content))
             connection.commit()
             connection.close()
-
+            app.logger.info("Article %s Created!" % (str(title)))
             return redirect(url_for('index'))
 
     return render_template('create.html')
@@ -75,10 +127,36 @@ def create():
 @app.route("/healthz")
 def healthCheck():
     response = {'result': 'OK - healthy'}
-    # app.logger.info('Status request successful')
+    app.logger.info('Status request successful')
     return response, 200
+
+
+@app.route("/metrics")
+def metrics():
+    connection = None
+    try:
+        connection = get_db_connection()
+        update_db_connection_count(connection)
+        db_connection_count = get_db_connection_count(connection)
+        post_count = get_post_count(connection)
+        update_post_count(connection, post_count)
+        response = {'db_connection_count': db_connection_count, 'post_count': post_count}
+        app.logger.info('Metrics request successful')
+        return response, 200
+    except Exception as err:
+        app.logger.info(err)
+        print(err)
+    finally:
+        if connection is not None:
+            connection.close()
 
 
 # start the application on port 3111
 if __name__ == "__main__":
+    # stream logs to app.log file
+    logging.basicConfig(filename='logs/app.log',
+                        level=logging.DEBUG,
+                        format='%(levelname)s:%(module)s:%(asctime)s:%(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S')
+
     app.run(host='0.0.0.0', port='3111')
