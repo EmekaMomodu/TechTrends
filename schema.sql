@@ -7,3 +7,15 @@ CREATE TABLE posts
     title   TEXT      NOT NULL,
     content TEXT      NOT NULL
 );
+
+DROP TABLE IF EXISTS metrics;
+
+CREATE TABLE metrics
+(
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    name            TEXT      NOT NULL,
+    value           TEXT      NOT NULL,
+    last_updated    TIMESTAMP NULL
+);
+
+
