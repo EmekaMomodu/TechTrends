@@ -1,0 +1,33 @@
+## Docker commands used to build the application 
+docker build -t techtrends .
+
+## Docker commands used to view all images created
+docker images
+
+## Docker commands used to run the application
+docker run -d -p 127.0.0.1:7111:3111 --name techtrends techtrends
+
+## Docker commands used to view all running containers
+docker ps
+
+## Docker commands used to get the application logs
+docker logs 73faf82f38dd
+# where 73faf82f38dd = Container ID
+
+## Logs from the container running the TechTrends application
+ * Serving Flask app "app" (lazy loading)
+ * Environment: production
+   WARNING: This is a development server. Do not use it in a production deployment.
+   Use a production WSGI server instead.
+ * Debug mode: off
+INFO:werkzeug: * Running on http://0.0.0.0:3111/ (Press CTRL+C to quit)
+INFO:werkzeug:172.17.0.1 - - [09/Sep/2021 22:21:15] "GET / HTTP/1.1" 200 -
+INFO:app:09/09/2021, 22:28:21, Article "Kubernetes Certification" retrieved!
+INFO:werkzeug:172.17.0.1 - - [09/Sep/2021 22:28:21] "GET /6 HTTP/1.1" 200 -
+INFO:app:09/09/2021, 22:28:26, A non-existing article accessed and the 404 page returned
+INFO:werkzeug:172.17.0.1 - - [09/Sep/2021 22:28:26] "GET /69 HTTP/1.1" 404 -
+INFO:app:09/09/2021, 22:28:29, "About Us" page retrieved!
+INFO:werkzeug:172.17.0.1 - - [09/Sep/2021 22:28:29] "GET /about HTTP/1.1" 200 -
+INFO:werkzeug:172.17.0.1 - - [09/Sep/2021 22:28:32] "GET /create HTTP/1.1" 200 -
+INFO:app:09/09/2021, 22:28:53, Article "MEKUS LALA" Created!
+INFO:werkzeug:172.17.0.1 - - [09/Sep/2021 22:28:53] "POST /create HTTP/1.1" 302 -
