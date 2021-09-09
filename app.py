@@ -1,6 +1,7 @@
 import sqlite3
 import datetime
 import logging
+import sys
 
 from flask import Flask, render_template, request, url_for, redirect, flash
 
@@ -37,8 +38,11 @@ def update_db_connection_count(connection):
         connection.execute(query, (new_metric_value, current_date_time, metric_name))
         connection.commit()
     except Exception as err:
-        app.logger.info('Query Failed: %s\nError: %s' % (query, str(err)))
-        print('Query Failed: %s\nError: %s' % (query, str(err)))
+        current_date_time = datetime.datetime.now()
+        app.logger.info('%s, Query Failed: %s\nError: %s' % (current_date_time.strftime('%m/%d/%Y, %H:%M:%S'),
+                                                             query, str(err)))
+
+        # print('Query Failed: %s\nError: %s' % (query, str(err)))
 
 
 def get_db_connection_count(connection):
@@ -63,13 +67,16 @@ def update_post_count(connection, post_count):
         connection.execute(query, (post_count, current_date_time, metric_name))
         connection.commit()
     except Exception as err:
-        app.logger.info('Query Failed: %s\nError: %s' % (query, str(err)))
+        current_date_time = datetime.datetime.now()
+        app.logger.info('%s, Query Failed: %s\nError: %s' % ((current_date_time.strftime('%m/%d/%Y, %H:%M:%S'),
+                                                              query, str(err))))
         print('Query Failed: %s\nError: %s' % (query, str(err)))
 
 
 # Define the Flask application
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your secret key'
+app.config['DEBUG'] = False
 
 
 # Define the main route of the web application
@@ -88,17 +95,21 @@ def index():
 def post(post_id):
     post = get_post(post_id)
     if post is None:
-        app.logger.info("A non-existing article is accessed and a 404 page is returned")
+        current_date_time = datetime.datetime.now()
+        app.logger.info("%s, A non-existing article accessed and the 404 page returned" % (current_date_time.strftime('%m/%d/%Y, %H:%M:%S')))
         return render_template('404.html'), 404
     else:
-        app.logger.info("Article %s retrieved!" % (str(post['title'])))
+        current_date_time = datetime.datetime.now()
+        app.logger.info('%s, Article "%s" retrieved!' % (current_date_time.strftime('%m/%d/%Y, %H:%M:%S'),
+                                                         str(post['title'])))
         return render_template('post.html', post=post)
 
 
 # Define the About Us page
 @app.route('/about')
 def about():
-    app.logger.info("About-Us page is retrieved")
+    current_date_time = datetime.datetime.now()
+    app.logger.info('%s, "About Us" page retrieved!' % (current_date_time.strftime('%m/%d/%Y, %H:%M:%S')))
     return render_template('about.html')
 
 
@@ -118,7 +129,8 @@ def create():
                                (title, content))
             connection.commit()
             connection.close()
-            app.logger.info("Article %s Created!" % (str(title)))
+            current_date_time = datetime.datetime.now()
+            app.logger.info('%s, Article "%s" Created!' % (current_date_time.strftime('%m/%d/%Y, %H:%M:%S'), str(title)))
             return redirect(url_for('index'))
 
     return render_template('create.html')
@@ -127,7 +139,8 @@ def create():
 @app.route("/healthz")
 def healthCheck():
     response = {'result': 'OK - healthy'}
-    app.logger.info('Status request successful')
+    current_date_time = datetime.datetime.now()
+    app.logger.info('%s, Status request successful' % (current_date_time.strftime('%m/%d/%Y, %H:%M:%S')))
     return response, 200
 
 
@@ -141,22 +154,27 @@ def metrics():
         post_count = get_post_count(connection)
         update_post_count(connection, post_count)
         response = {'db_connection_count': db_connection_count, 'post_count': post_count}
-        app.logger.info('Metrics request successful')
+        current_date_time = datetime.datetime.now()
+        app.logger.info('%s, Metrics request successful' % (current_date_time.strftime('%m/%d/%Y, %H:%M:%S')))
         return response, 200
     except Exception as err:
-        app.logger.info(err)
+        current_date_time = datetime.datetime.now()
+        app.logger.info('%s, %s' % (current_date_time.strftime('%m/%d/%Y, %H:%M:%S'), str(err)))
         print(err)
     finally:
         if connection is not None:
             connection.close()
 
 
-# start the application on port 3111
 if __name__ == "__main__":
-    # stream logs to app.log file
-    logging.basicConfig(filename='logs/app.log',
-                        level=logging.DEBUG,
-                        format='%(levelname)s:%(module)s:%(asctime)s:%(message)s',
-                        datefmt='%Y-%m-%d %H:%M:%S')
+    # stream logs to app.log file and console
+    logging.basicConfig(level=logging.DEBUG,
+                        datefmt='%Y-%m-%d %H:%M:%S',
+                        handlers=[
+                            logging.StreamHandler(sys.stdout),
+                            logging.StreamHandler(sys.stderr),
+                            logging.FileHandler('logs/app.log')
+                        ])
 
-    app.run(host='0.0.0.0', port='3111')
+    # start the application on port 3111
+    app.run(host='127.0.0.1', port='3111')
