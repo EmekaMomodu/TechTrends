@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - image: emekamomodu/techtrends:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         name: techtrends
         ports:
           - containerPort: 3111
