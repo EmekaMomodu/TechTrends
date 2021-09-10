@@ -172,8 +172,8 @@ if __name__ == "__main__":
                         datefmt='%Y-%m-%d %H:%M:%S',
                         handlers=[
                             logging.StreamHandler(sys.stdout),
-                            logging.StreamHandler(sys.stderr),
-                            logging.FileHandler('logs/app.log')
+                            logging.StreamHandler(sys.stderr)
+                            # ,logging.FileHandler('logs/app.log')
                         ])
 
     # start the application on port 3111
