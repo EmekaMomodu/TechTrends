@@ -1,0 +1,25 @@
+## Set the API endpoint used to create the Service resource.
+apiVersion: v1
+## Define the type of the resource.
+kind: Service
+## Set the parameters that make the object identifiable, such as its name, namespace, and labels.
+metadata:
+  labels:
+    app: techtrends
+  name: techtrends
+  namespace: sandbox
+## Define the desired configuration for the Service resource.
+spec:
+  ## Define the ports that the service should serve on. 
+  ## For example, the service is exposed on port 8111, and
+  ## directs the traffic to the pods on port 6112, using TCP.
+  ports:
+  - port: 4111
+    protocol: TCP
+    targetPort: 3111
+  ## Identify the pods managed by this Service using the following selectors.
+  ## In this case, all pods with the label `techtrends`.
+  selector:
+    app: techtrends
+  ## Define the Service type, here set to ClusterIP.
+  type: ClusterIP
