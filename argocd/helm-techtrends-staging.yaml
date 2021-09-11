@@ -10,7 +10,7 @@ spec:
   project: default
   source:
     helm:
-      valuesFiles:
+      valueFiles:
         - values-staging.yaml
     path: helm
     repoURL: https://github.com/EmekaMomodu/TechTrends
