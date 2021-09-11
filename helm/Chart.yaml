@@ -1,0 +1,9 @@
+apiVersion: v1
+name: techtrends
+description: Techtrends App for latest info in the tech World
+keywords:
+- techtrends
+version: 1.0.0
+maintainers:
+- name: Emeka Momodu
+  email: emeka.momodu@gmail.com
